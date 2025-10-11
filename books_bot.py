@@ -39,7 +39,7 @@ TRACK_GRADES: Final[List[str]] = ['11', '12']
 
 CONTACT_INFO: Final[str] = (
     "🌐 **Contact Me**\n\n"
-    "Telegram: `@Cs1At07`\n"
+    "Telegram: [Ño 🕕 4 ...](https://t.me/Cs1At07)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
     "Email: `ym47484988@gmail.com`\n"
     "LinkedIn: [Yusuf Mohammed](https://www.linkedin.com/in/yusuf-mohammed-5272572b6/)\n\n"
