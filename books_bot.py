@@ -5,8 +5,9 @@ from enum import Enum
 import re
 import logging
 import sys
+import os
 
-TOKEN: Final = "8237566202:AAGtv8j6ZYsOJRYXGgGaNBklfbjBzkg0too" 
+TOKEN: Final = os.environ.get("BOT_TOKEN")
 BOT_USERNAME: Final = "@EthioEducational2025Bot"
 PRIVATE_CHANNEL_ID: Final = "-1002976173648" 
 logging.basicConfig(
