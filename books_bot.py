@@ -7,9 +7,16 @@ import logging
 import sys
 import os
 
-TOKEN: Final = os.environ.get("BOT_TOKEN")
+# --- CRITICAL FIX APPLIED HERE: os.enviro is corrected to os.environ and checked ---
+if 'BOT_TOKEN' not in os.environ:
+    # A cleaner way to exit if a critical environment variable is missing
+    print("FATAL ERROR: Environment variable 'BOT_TOKEN' is not set.")
+    sys.exit(1)
+TOKEN: Final = os.environ['BOT_TOKEN']
+# -----------------------------------------------------------------------------------
+
 BOT_USERNAME: Final = "@EthioEducational2025Bot"
-PRIVATE_CHANNEL_ID: Final = "-1002976173648" 
+PRIVATE_CHANNEL_ID: Final = "-1002976173648"
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -39,13 +46,13 @@ TRACK_GRADES: Final[List[str]] = ['11', '12']
 
 CONTACT_INFO: Final[str] = (
     "🌐 **Contact Me**\n\n"
-    "Telegram: [Ño 🕕 4 ...](https://t.me/Cs1At07)\n"
+    "Telegram: `@Cs1At07`\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
     "Email: `ym47484988@gmail.com`\n"
     "LinkedIn: [Yusuf Mohammed](https://www.linkedin.com/in/yusuf-mohammed-5272572b6/)\n\n"
     "🌐 **For more follow me on**\n\n"
-    "Telegram Channel: [YMC Tech Solutions](https://t.me/oro_technologys)\n"
-    "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n\n"
+    "Telegram Channel: [oro\_technologys](https://t.me/oro_technologys)\n"
+    "Instagram: [kebilad\_7488](https://www.instagram.com/kebilad_7488/)\n\n"
     "Feel free to reach out for any assistance or inquiries!"
 )
 NAVIGATION_ROW = [
@@ -151,7 +158,7 @@ BOOK_DATA: Dict[str, Dict[str, Dict[str, List[BookMetadata]]]] = {
             '': [
                 BookMetadata("Citizenship Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 48),
                 BookMetadata("History Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 49),
-                BookMetadata("Physics  Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 50),
+                BookMetadata("Physics Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 50),
                 BookMetadata("HPE Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 51),
                 BookMetadata("Maths Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 52),
                 BookMetadata("Geography Grade 10 Teachers Guide", PRIVATE_CHANNEL_ID, 53),
@@ -188,7 +195,7 @@ BOOK_DATA: Dict[str, Dict[str, Dict[str, List[BookMetadata]]]] = {
                 BookMetadata("Mathematics Grade 11 Teachers Guide", PRIVATE_CHANNEL_ID, 67),
                 BookMetadata("Physics Grade 11 Teachers Guide", PRIVATE_CHANNEL_ID, 68), 
                 BookMetadata("Chemistry Grade 11 Teachers Guide", PRIVATE_CHANNEL_ID, 69),
-                BookMetadata("Biology  Grade 11 Teachers Guide", PRIVATE_CHANNEL_ID, 70),
+                BookMetadata("Biology Grade 11 Teachers Guide", PRIVATE_CHANNEL_ID, 70),
             ],
             SOCIAL_SCIENCE: [
                 BookMetadata("English Grade 11 Teachers Guide", PRIVATE_CHANNEL_ID, 66), 
@@ -461,7 +468,7 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
             sent_message = await context.bot.copy_message(
                 chat_id=chat_id,
                 from_chat_id=source_chat_id, 
-                message_id=message_id,        
+                message_id=message_id, 
                 caption=f"📚 **{file_name}**", 
                 parse_mode="Markdown",
                 disable_notification=True
@@ -469,7 +476,7 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
             
             # Track sent message for deletion
             if MESSAGE_HISTORY_KEY not in context.user_data:
-                 context.user_data[MESSAGE_HISTORY_KEY] = []
+                context.user_data[MESSAGE_HISTORY_KEY] = []
             context.user_data[MESSAGE_HISTORY_KEY].append(sent_message.message_id)
 
             files_sent_count += 1
@@ -517,7 +524,9 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("menu", start_command))
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
+
     logger.info("Polling...")
-    app.run_polling(poll_interval=3)"
+    app.run_polling(poll_interval=3)
