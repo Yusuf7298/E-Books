@@ -1,31 +1,23 @@
-from typing import Final, Dict, List
-from telegram import (
-    Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
-)
-from telegram.ext import (
-    Application, CommandHandler, ContextTypes, MessageHandler, filters
-)
+from typing import Final, Dict, List, Optional
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from enum import Enum
 import re
 import logging
+import sys
 import os
 
-# --- Environment Variables ---
 TOKEN: Final = os.environ.get("BOT_TOKEN")
 BOT_USERNAME: Final = "@EthioEducational2025Bot"
-PRIVATE_CHANNEL_ID: Final = "-1002976173648"
-PORT = int(os.environ.get("PORT", 10000))  # Render assigns this port
-APP_URL = os.environ.get("RENDER_EXTERNAL_URL")  # Render provides this for webhook
-
-# --- Logging ---
+PRIVATE_CHANNEL_ID: Final = "-1002976173648" 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# --- Bot States ---
 class BotState(Enum):
+    """Enums for bot states, replacing string constants."""
     MAIN = "main"
     STUDENT_GRADE = "student_grade"
     TEACHER_GRADE = "teacher_grade"
@@ -34,7 +26,7 @@ class BotState(Enum):
 USER_STATE_KEY: Final = "STATE"
 PENDING_GRADE_KEY: Final = "PENDING_GRADE"
 PENDING_STATE_KEY: Final = "PENDING_STATE"
-MESSAGE_HISTORY_KEY: Final = "MSG_HISTORY"
+MESSAGE_HISTORY_KEY: Final = "MSG_HISTORY" 
 
 # --- Directory and Track Constants ---
 STUDENT_DIR: Final = "Students_Books"
@@ -44,11 +36,11 @@ SOCIAL_SCIENCE: Final = "Social Science"
 AVAILABLE_GRADES: Final[List[str]] = ['9', '10', '11', '12']
 TRACK_GRADES: Final[List[str]] = ['11', '12']
 
-# --- Contact Info ---
+
 CONTACT_INFO: Final[str] = (
     "🌐 **Contact Me**\n\n"
     "Telegram: [Ño 🕕 4 ...](https://t.me/Cs1At07)\n"
-    "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n"
+    "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
     "Email: `ym47484988@gmail.com`\n"
     "LinkedIn: [Yusuf Mohammed](https://www.linkedin.com/in/yusuf-mohammed-5272572b6/)\n\n"
     "🌐 **For more follow me on**\n\n"
@@ -56,8 +48,6 @@ CONTACT_INFO: Final[str] = (
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n\n"
     "Feel free to reach out for any assistance or inquiries!"
 )
-
-# --- Keyboards ---
 NAVIGATION_ROW = [
     KeyboardButton("Back ↩️"),
     KeyboardButton("Main Menu 🏠"),
@@ -72,7 +62,6 @@ MAIN_MENU_KEYBOARD = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True, one_time_keyboard=False
 )
-
 def create_grade_keyboard(grades_list: List[str]) -> ReplyKeyboardMarkup:
     grades = sorted(grades_list, key=int)
     keyboard_layout = []
@@ -85,7 +74,7 @@ def create_grade_keyboard(grades_list: List[str]) -> ReplyKeyboardMarkup:
     if current_row:
         keyboard_layout.append(current_row)
     keyboard_layout.append(NAVIGATION_ROW)
-    return ReplyKeyboardMarkup(keyboard_layout, resize_keyboard=True)
+    return ReplyKeyboardMarkup(keyboard_layout, resize_keyboard=True, one_time_keyboard=False)
 
 STUDENT_GRADE_KEYBOARD = create_grade_keyboard(AVAILABLE_GRADES)
 TEACHER_GRADE_KEYBOARD = create_grade_keyboard(AVAILABLE_GRADES)
@@ -94,7 +83,7 @@ TRACK_KEYBOARD = ReplyKeyboardMarkup(
         [KeyboardButton(f"{NATURAL_SCIENCE} 🧪"), KeyboardButton(f"{SOCIAL_SCIENCE} 📜")],
         NAVIGATION_ROW
     ],
-    resize_keyboard=True
+    resize_keyboard=True, one_time_keyboard=False
 )
 
 class BookMetadata:
@@ -251,38 +240,48 @@ BOOK_DATA: Dict[str, Dict[str, Dict[str, List[BookMetadata]]]] = {
         }
     }
 }
-def get_dynamic_book_metadata(grade: str, state: str, track: str = "") -> List:
+def get_dynamic_book_metadata(grade: str, state: str, track: str = "") -> List[BookMetadata]:
+    """Retrieves book metadata (name, ID) from the in-memory structure."""
+    
     final_track = track if grade in TRACK_GRADES else ''
+    
     try:
         grade_data = BOOK_DATA.get(grade, {})
         state_data = grade_data.get(state, {})
         return state_data.get(final_track, [])
     except Exception as e:
-        logger.error(f"Data lookup error: {e}")
+        logger.error(f"Data lookup error for G:{grade}, S:{state}, T:{track}: {e}")
         return []
 
-async def delete_history(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+async def delete_history(chat_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
     if MESSAGE_HISTORY_KEY in context.user_data:
         try:
-            for mid in context.user_data[MESSAGE_HISTORY_KEY]:
-                await context.bot.delete_message(chat_id=chat_id, message_id=mid)
+            for message_id in context.user_data[MESSAGE_HISTORY_KEY]:
+                await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
             context.user_data[MESSAGE_HISTORY_KEY] = []
         except Exception as e:
-            logger.warning(f"Failed to delete history for {chat_id}: {e}")
+            logger.warning(f"Failed to delete old messages for {chat_id}: {e}")
 
-async def send_and_track(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str,
-                         reply_markup=None, parse_mode="Markdown",
-                         delete_history_flag=False, disable_web_page_preview=False):
+async def send_and_track(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, reply_markup=None, parse_mode="Markdown", delete_history_flag=False, disable_web_page_preview=False):
     chat_id = update.message.chat_id
+
     if delete_history_flag:
         await delete_history(chat_id, context)
-    sent = await update.message.reply_text(
-        text, reply_markup=reply_markup, parse_mode=parse_mode,
+
+    sent_message = await update.message.reply_text(
+        text,
+        reply_markup=reply_markup,
+        parse_mode=parse_mode,
         disable_web_page_preview=disable_web_page_preview
     )
-    context.user_data.setdefault(MESSAGE_HISTORY_KEY, []).extend(
-        [update.message.message_id, sent.message_id]
-    )
+
+    if MESSAGE_HISTORY_KEY not in context.user_data:
+        context.user_data[MESSAGE_HISTORY_KEY] = []
+
+    # Track both the sent message and the incoming user message for cleaner deletion
+    context.user_data[MESSAGE_HISTORY_KEY].append(sent_message.message_id)
+    if update.message.message_id not in context.user_data[MESSAGE_HISTORY_KEY]:
+        context.user_data[MESSAGE_HISTORY_KEY].append(update.message.message_id)
 
 
 # --- Command/Message Handlers ---
@@ -517,29 +516,8 @@ if __name__ == "__main__":
     app = Application.builder().token(TOKEN).read_timeout(120.0).write_timeout(120.0).build()
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("menu", start_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
-
-    # Webhook mode for Render
-        if APP_URL and TOKEN:
-        webhook_url = f"{APP_URL}/{TOKEN}"
-        logger.info(f"Running in webhook mode on {APP_URL}. Full URL: {webhook_url}")
-        # app.run_webhook(
-        #     listen="0.0.0.0",
-        #     port=PORT,
-        #     url_path=TOKEN,
-        #     webhook_url=webhook_url,
-        # )
-        
-        # Add a placeholder for Render to run a web server (required by Render)
-        import http.server
-        import socketserver
-        
-        Handler = http.server.SimpleHTTPRequestHandler
-        
-        with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
-            logger.info(f"Serving placeholder web server at port {PORT}")
-            httpd.serve_forever()
-    else:
-        logger.info("Running locally with polling mode...")
-        app.run_polling(poll_interval=3)
+    logger.info("Polling...")
+    app.run_polling(poll_interval=3)"
