@@ -521,15 +521,25 @@ if __name__ == "__main__":
     app.add_error_handler(error_handler)
 
     # Webhook mode for Render
-    if APP_URL:
-        webhook_url = f"{APP_URL}/webhook"
-        logger.info(f"Running in webhook mode on {APP_URL}")
-        app.run_webhook(
-            listen="0.0.0.0",
-            port=PORT,
-            url_path=TOKEN,
-            webhook_url=webhook_url,
-        )
+        if APP_URL and TOKEN:
+        webhook_url = f"{APP_URL}/{TOKEN}"
+        logger.info(f"Running in webhook mode on {APP_URL}. Full URL: {webhook_url}")
+        # app.run_webhook(
+        #     listen="0.0.0.0",
+        #     port=PORT,
+        #     url_path=TOKEN,
+        #     webhook_url=webhook_url,
+        # )
+        
+        # Add a placeholder for Render to run a web server (required by Render)
+        import http.server
+        import socketserver
+        
+        Handler = http.server.SimpleHTTPRequestHandler
+        
+        with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
+            logger.info(f"Serving placeholder web server at port {PORT}")
+            httpd.serve_forever()
     else:
         logger.info("Running locally with polling mode...")
         app.run_polling(poll_interval=3)
