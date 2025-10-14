@@ -8,10 +8,6 @@ import sys
 import os
 
 # --- CRITICAL FIX APPLIED HERE: os.enviro is corrected to os.environ and checked ---
-if 'BOT_TOKEN' not in os.environ:
-    # A cleaner way to exit if a critical environment variable is missing
-    print("FATAL ERROR: Environment variable 'BOT_TOKEN' is not set.")
-    sys.exit(1)
 TOKEN: Final = os.environ['BOT_TOKEN']
 # -----------------------------------------------------------------------------------
 
