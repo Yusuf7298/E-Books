@@ -2,14 +2,28 @@ from typing import Final, Dict, List, Optional
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from enum import Enum
+from pathlib import Path
 import re
 import logging
 import sys
 import os
+from dotenv import load_dotenv
+ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(ENV_PATH)
 
-# --- CRITICAL FIX APPLIED HERE: os.enviro is corrected to os.environ and checked ---
-TOKEN: Final = os.environ['BOT_TOKEN']
-# -----------------------------------------------------------------------------------
+TOKEN: Final = os.environ.get("BOT_TOKEN", "")
+if not TOKEN:
+    raise RuntimeError(
+        "Missing BOT_TOKEN. Set it in .env or export it in your shell environment."
+    )
+
+WEBHOOK_PATH: Final = os.environ.get("WEBHOOK_PATH", "/telegram")
+PUBLIC_BASE_URL: Final = os.environ.get("PUBLIC_BASE_URL", "").strip()
+WEBHOOK_URL: Final = (
+    f"{PUBLIC_BASE_URL.rstrip('/')}{WEBHOOK_PATH}" if PUBLIC_BASE_URL else ""
+)
+WEBHOOK_SECRET: Final = os.environ.get("WEBHOOK_SECRET", "")
+PORT: Final = int(os.environ.get("PORT", "8080"))
 
 BOT_USERNAME: Final = "@EthioEducational2025Bot"
 PRIVATE_CHANNEL_ID: Final = "-1002976173648"
@@ -42,9 +56,9 @@ TRACK_GRADES: Final[List[str]] = ['11', '12']
 
 CONTACT_INFO: Final[str] = (
     "🌐 **Contact Me**\n\n"
-    "Telegram: `@Cs1At07`\n"
+    "Telegram: [Ño 🕕 4 ... ](https://t.me/Cs1At07)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
-    "Email: `ym47484988@gmail.com`\n"
+    "Email: [ym47484988@gmail.com](mailto:ym47484988@gmail.com)\n"
     "LinkedIn: [Yusuf Mohammed](https://www.linkedin.com/in/yusuf-mohammed-5272572b6/)\n\n"
     "🌐 **For more follow me on**\n\n"
     "Telegram Channel: [YMC Tech Solutions](https://t.me/oro_technologys)\n"
@@ -424,7 +438,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             context.user_data.pop(PENDING_STATE_KEY, None)
 
             keyboard = STUDENT_GRADE_KEYBOARD if original_state == BotState.STUDENT_GRADE else TEACHER_GRADE_KEYBOARD
-            await send_and_track(update, context, "", reply_markup=keyboard)
+            await send_and_track(
+                update,
+                context,
+                "Please select another grade or go back.",
+                reply_markup=keyboard,
+            )
             return
         else:
             await send_and_track(update, context, "Please select a valid Stream or use the navigation buttons.", reply_markup=TRACK_KEYBOARD)
@@ -489,7 +508,7 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
             
     await send_and_track(
         update, context,
-        f"✅ Finished! Sent **{files_sent_count}** files for {book_category}.\n\nPlease select another grade or go back.",
+        f"✅ Finished! Sent **{files_sent_count}** files for {book_category}.\n\nThanks for using E-Books what's next ?",
         reply_markup=keyboard
     )
 
@@ -524,5 +543,16 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
 
-    logger.info("Polling...")
-    app.run_polling(poll_interval=3)
+    if not WEBHOOK_URL:
+        raise RuntimeError(
+            "Missing PUBLIC_BASE_URL for webhooks. Set it in .env (e.g., https://your-domain)."
+        )
+
+    logger.info("Starting webhook...")
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=WEBHOOK_PATH.lstrip("/"),
+        webhook_url=WEBHOOK_URL,
+        secret_token=WEBHOOK_SECRET or None,
+    )
