@@ -56,7 +56,7 @@ CONTACT_INFO: Final[str] = (
     "Email: [ym47484988@gmail.com](mailto:ym47484988@gmail.com)\n"
     "LinkedIn: [Yusuf Mohammed](https://www.linkedin.com/in/yusuf-mohammed-5272572b6/)\n\n"
     "🌐 **For more follow me on**\n\n"
-    "Telegram Channel: [YMC Tech Solutions](https://t.me/oro_technologys)\n"
+    "Telegram Channel: [Yusuf Moh](https://t.me/yusufcodes)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n\n"
     "Feel free to reach out for any assistance or inquiries!"
 )
