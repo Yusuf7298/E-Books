@@ -1,5 +1,7 @@
 from typing import Final, Dict, List, Optional
+# pyrefly: ignore [missing-import]
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+# pyrefly: ignore [missing-import]
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from enum import Enum
 from pathlib import Path
@@ -8,7 +10,7 @@ import logging
 import sys
 import os
 from dotenv import load_dotenv
-ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
+ENV_PATH = Path(__file__).resolve().parent / ".env"
 load_dotenv(ENV_PATH)
 
 TOKEN: Final = os.environ.get("BOT_TOKEN", "")
@@ -17,15 +19,7 @@ if not TOKEN:
         "Missing BOT_TOKEN. Set it in .env or export it in your shell environment."
     )
 
-WEBHOOK_PATH: Final = os.environ.get("WEBHOOK_PATH", "/telegram")
-PUBLIC_BASE_URL: Final = os.environ.get("PUBLIC_BASE_URL", "").strip()
-WEBHOOK_URL: Final = (
-    f"{PUBLIC_BASE_URL.rstrip('/')}{WEBHOOK_PATH}" if PUBLIC_BASE_URL else ""
-)
-WEBHOOK_SECRET: Final = os.environ.get("WEBHOOK_SECRET", "")
-PORT: Final = int(os.environ.get("PORT", "8080"))
-
-BOT_USERNAME: Final = "@EthioEducational2025Bot"
+BOT_USERNAME: Final = "@EthioEducationalsBot"
 PRIVATE_CHANNEL_ID: Final = "-1002976173648"
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -55,7 +49,8 @@ TRACK_GRADES: Final[List[str]] = ['11', '12']
 
 
 CONTACT_INFO: Final[str] = (
-    "🌐 **Contact Me**\n\n"
+    "🌐 **Contact & Recommended Bots**\n\n"
+    "🎓 **Study Bot:** Practice & study with [@EthioSmartStudy\\_bot](https://t.me/EthioSmartStudy_bot)\n\n"
     "Telegram: [Ño 🕕 4 ... ](https://t.me/Cs1At07)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
     "Email: [ym47484988@gmail.com](mailto:ym47484988@gmail.com)\n"
@@ -306,7 +301,11 @@ async def send_and_track(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.message.chat_id
     context.user_data[USER_STATE_KEY] = BotState.MAIN
-    welcome_message = "Hello! I'm your E-Book bot. 📚\nHow can I help you today? Please choose an option from the menu below."
+    welcome_message = (
+        "Hello! I'm your E-Book bot. 📚\n\n"
+        "🎓 *Need study help?* You can study and practice with [@EthioSmartStudy\\_bot](https://t.me/EthioSmartStudy_bot)!\n\n"
+        "How can I help you today? Please choose an option from the menu below."
+    )
     # Use delete_history_flag=True for /start to wipe any previous session mess
     await send_and_track(update, context, welcome_message, reply_markup=MAIN_MENU_KEYBOARD, delete_history_flag=True)
 
@@ -519,6 +518,7 @@ async def help_command(update:Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         "1. **Student Books** (by Grade)\n"
         "2. **Teacher Guides** (by Grade)\n"
         "3. **Contact Info**\n\n"
+        "🎓 *Looking for study tools?* Practice and study with [@EthioSmartStudy\\_bot](https://t.me/EthioSmartStudy_bot)!\n\n"
         "**Navigation:**\n"
         "↩️ Back: Go to the previous menu.\n"
         "🏠 Main Menu: Go to the primary selection screen.\n"
@@ -533,7 +533,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 # --- Main Bot Setup ---
 
 if __name__ == "__main__":
-    logger.info("Starting bot...")
+    logger.info("Starting bot in polling mode...")
 
     app = Application.builder().token(TOKEN).read_timeout(120.0).write_timeout(120.0).build()
     app.add_handler(CommandHandler("start", start_command))
@@ -543,16 +543,5 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
 
-    if not WEBHOOK_URL:
-        raise RuntimeError(
-            "Missing PUBLIC_BASE_URL for webhooks. Set it in .env (e.g., https://your-domain)."
-        )
-
-    logger.info("Starting webhook...")
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=WEBHOOK_PATH.lstrip("/"),
-        webhook_url=WEBHOOK_URL,
-        secret_token=WEBHOOK_SECRET or None,
-    )
+    logger.info("Bot is running with polling...")
+    app.run_polling()
