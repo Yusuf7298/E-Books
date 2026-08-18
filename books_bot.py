@@ -50,7 +50,7 @@ TRACK_GRADES: Final[List[str]] = ['11', '12']
 
 CONTACT_INFO: Final[str] = (
     "🌐 **Contact & Recommended Bots**\n\n"
-    "🎓 **Study Bot:** Practice & study with [@EthioSmartStudy\\_bot](https://t.me/EthioSmartStudy_bot)\n\n"
+    "🎓 **Study Bot:** Practice & study with [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot)\n\n"
     "Telegram: [Ño 🕕 4 ... ](https://t.me/Cs1At07)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
     "Email: [ym47484988@gmail.com](mailto:ym47484988@gmail.com)\n"
@@ -303,7 +303,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     context.user_data[USER_STATE_KEY] = BotState.MAIN
     welcome_message = (
         "Hello! I'm your E-Book bot. 📚\n\n"
-        "🎓 *Need study help?* You can study and practice with [@EthioSmartStudy\\_bot](https://t.me/EthioSmartStudy_bot)!\n\n"
+        "🎓 Need help studying? Check out [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot) for practice and study tools!\n\n"
         "How can I help you today? Please choose an option from the menu below."
     )
     # Use delete_history_flag=True for /start to wipe any previous session mess
@@ -372,11 +372,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if current_state == BotState.MAIN:
         if text == "📚 Get Student Books":
             context.user_data[USER_STATE_KEY] = BotState.STUDENT_GRADE
-            await send_and_track(update, context, "Great! Please select the **Grade** for the Student Books.", reply_markup=STUDENT_GRADE_KEYBOARD)
+            await send_and_track(update, context, "Great! Please select the Grade for the Student Books.", reply_markup=STUDENT_GRADE_KEYBOARD)
             return
         elif text == "👨‍🏫 Get Teacher Guides":
             context.user_data[USER_STATE_KEY] = BotState.TEACHER_GRADE
-            await send_and_track(update, context, "Great! Please select the **Grade** for the Teacher Guides.", reply_markup=TEACHER_GRADE_KEYBOARD)
+            await send_and_track(update, context, "Great! Please select the Grade for the Teacher Guides.", reply_markup=TEACHER_GRADE_KEYBOARD)
             return
         elif text == "📞 Let's Contact":
             # The previous contact error was due to malformed Markdown links. Fixed in the constant.
@@ -399,7 +399,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 context.user_data[USER_STATE_KEY] = BotState.TRACK_SELECTION
                 await send_and_track(
                     update, context,
-                    f"You selected Grade **{grade}**. Please choose your **Stream**.",
+                    f"You selected Grade {grade}. Please choose your Stream.",
                     reply_markup=TRACK_KEYBOARD
                 )
                 return
@@ -466,10 +466,10 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
     keyboard = STUDENT_GRADE_KEYBOARD if state == STUDENT_DIR else TEACHER_GRADE_KEYBOARD
 
     if not book_metadata_list:
-        await send_and_track(update, context, f"I don't have any books for **{book_category}** in this section.", reply_markup=keyboard)
+        await send_and_track(update, context, f"I don't have any books for {book_category} in this section.", reply_markup=keyboard)
         return
 
-    await send_and_track(update, context, f"Preparing to send **{len(book_metadata_list)}** files for **{book_category}** now...", reply_markup=keyboard)
+    await send_and_track(update, context, f"Preparing to send {len(book_metadata_list)} files for {book_category} now...", reply_markup=keyboard)
 
     files_sent_count = 0
     
@@ -483,7 +483,7 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
                 chat_id=chat_id,
                 from_chat_id=source_chat_id, 
                 message_id=message_id, 
-                caption=f"📚 **{file_name}**", 
+                caption=f"📚 {file_name}", 
                 parse_mode="Markdown",
                 disable_notification=True
             )
@@ -500,14 +500,14 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
             logger.error(f"Failed to copy document {file_name} (Msg ID: {message_id}): {e}")
             await send_and_track(
                 update, context, 
-                f"❌ Failed to send file **{file_name}**.\n\n"
-                f"**Troubleshoot:** Ensure the bot is an **administrator** in the channel and the Message ID **{message_id}** is correct.", 
+                f"❌ Failed to send file {file_name}.\n\n"
+                f"Troubleshoot: Ensure the bot is an administrator in the channel and the Message ID {message_id} is correct.", 
                 reply_markup=keyboard
             )
             
     await send_and_track(
         update, context,
-        f"✅ Finished! Sent **{files_sent_count}** files for {book_category}.\n\nThanks for using E-Books what's next ?",
+        f"✅ Finished! Sent {files_sent_count} files for {book_category}.\n\nThanks for using E-Books what's next ?",
         reply_markup=keyboard
     )
 
@@ -515,11 +515,11 @@ async def help_command(update:Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     help_message = (
         "📚 Textbook Bot Help 📚\n\n"
         "Use the Main Menu 🏠 button to navigate to:\n"
-        "1. **Student Books** (by Grade)\n"
-        "2. **Teacher Guides** (by Grade)\n"
-        "3. **Contact Info**\n\n"
-        "🎓 *Looking for study tools?* Practice and study with [@EthioSmartStudy\\_bot](https://t.me/EthioSmartStudy_bot)!\n\n"
-        "**Navigation:**\n"
+        "1. Student Books (by Grade)\n"
+        "2. Teacher Guides (by Grade)\n"
+        "3. Contact Info\n\n"
+        "🎓 *Looking for study tools?* Practice and study with [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot)!\n\n"
+        "Navigation:\n"
         "↩️ Back: Go to the previous menu.\n"
         "🏠 Main Menu: Go to the primary selection screen.\n"
         "❌ Clear Menu: Deletes bot messages and hides the keyboard (resets session)."
@@ -528,9 +528,6 @@ async def help_command(update:Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error("Exception while handling an update:", exc_info=context.error)
-
-
-# --- Main Bot Setup ---
 
 if __name__ == "__main__":
     logger.info("Starting bot in polling mode...")
@@ -543,5 +540,8 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
 
-    logger.info("Bot is running with polling...")
-    app.run_polling()
+    logger.info("Bot is running with polling... Press Ctrl+C to stop.")
+    try:
+        app.run_polling()
+    except KeyboardInterrupt:
+        logger.info("Bot stopped gracefully.")
