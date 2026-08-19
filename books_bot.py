@@ -374,7 +374,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
             
     elif current_state in [BotState.STUDENT_GRADE, BotState.TEACHER_GRADE]:
-        match = re.search(r'Grade\s (\d+)', text)
+        match = re.search(r'Grade\s*(\d+)', text)
         if match:
             grade = match.group(1).strip()
             state_dir = STUDENT_DIR if current_state == BotState.STUDENT_GRADE else TEACHER_DIR
@@ -413,18 +413,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         state_dir = STUDENT_DIR if original_state == BotState.STUDENT_GRADE else TEACHER_DIR
         
         if track and grade and original_state:
-            await execute_file_sending(update, context, grade=grade, state=state_dir, track=track)
             context.user_data[USER_STATE_KEY] = original_state
             context.user_data.pop(PENDING_GRADE_KEY, None)
             context.user_data.pop(PENDING_STATE_KEY, None)
-
-            keyboard = STUDENT_GRADE_KEYBOARD if original_state == BotState.STUDENT_GRADE else TEACHER_GRADE_KEYBOARD
-            await send_and_track(
-                update,
-                context,
-                "Please select another grade or go back.",
-                reply_markup=keyboard,
-            )
+            await execute_file_sending(update, context, grade=grade, state=state_dir, track=track)
             return
         else:
             await send_and_track(update, context, "Please select a valid Stream or use the navigation buttons.", reply_markup=TRACK_KEYBOARD)
@@ -483,9 +475,14 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
                 reply_markup=keyboard
             )
             
+    finish_message = (
+        f"✅ Finished! Sent {files_sent_count} files for {book_category}.\n\n"
+        f"🎓 Need help studying? Check out [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot) for practice and study tools!\n\n"
+        f"Thanks for using E-Books! What's next?"
+    )
     await send_and_track(
         update, context,
-        f"✅ Finished! Sent {files_sent_count} files for {book_category}.\n\nThanks for using E-Books what's next ?",
+        finish_message,
         reply_markup=keyboard
     )
 
