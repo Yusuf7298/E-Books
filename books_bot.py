@@ -38,8 +38,6 @@ USER_STATE_KEY: Final = "STATE"
 PENDING_GRADE_KEY: Final = "PENDING_GRADE"
 PENDING_STATE_KEY: Final = "PENDING_STATE"
 MESSAGE_HISTORY_KEY: Final = "MSG_HISTORY" 
-
-# --- Directory and Track Constants ---
 STUDENT_DIR: Final = "Students_Books"
 TEACHER_DIR: Final = "Teachers_Guide"
 NATURAL_SCIENCE: Final = "Natural Science"
@@ -49,13 +47,13 @@ TRACK_GRADES: Final[List[str]] = ['11', '12']
 
 
 CONTACT_INFO: Final[str] = (
-    "🌐 **Contact & Recommended Bots**\n\n"
-    "🎓 **Study Bot:** Practice & study with [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot)\n\n"
+    "🌐 Contact & Recommended Bots\n\n"
+    "🎓 Study Bot: Practice & study with [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot)\n\n"
     "Telegram: [Ño 🕕 4 ... ](https://t.me/Cs1At07)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n" 
     "Email: [ym47484988@gmail.com](mailto:ym47484988@gmail.com)\n"
     "LinkedIn: [Yusuf Mohammed](https://www.linkedin.com/in/yusuf-mohammed-5272572b6/)\n\n"
-    "🌐 **For more follow me on**\n\n"
+    "For more follow me on\n\n"
     "Telegram Channel: [Yusuf Moh](https://t.me/yusufcodes)\n"
     "Instagram: [Yusuf Mohammed](https://www.instagram.com/kebilad_7488/)\n\n"
     "Feel free to reach out for any assistance or inquiries!"
@@ -290,13 +288,10 @@ async def send_and_track(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
     if MESSAGE_HISTORY_KEY not in context.user_data:
         context.user_data[MESSAGE_HISTORY_KEY] = []
 
-    # Track both the sent message and the incoming user message for cleaner deletion
     context.user_data[MESSAGE_HISTORY_KEY].append(sent_message.message_id)
     if update.message.message_id not in context.user_data[MESSAGE_HISTORY_KEY]:
         context.user_data[MESSAGE_HISTORY_KEY].append(update.message.message_id)
 
-
-# --- Command/Message Handlers ---
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.message.chat_id
@@ -306,22 +301,18 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "🎓 Need help studying? Check out [📚 Ethio-Smart Study](https://t.me/EthioSmartStudy_bot) for practice and study tools!\n\n"
         "How can I help you today? Please choose an option from the menu below."
     )
-    # Use delete_history_flag=True for /start to wipe any previous session mess
     await send_and_track(update, context, welcome_message, reply_markup=MAIN_MENU_KEYBOARD, delete_history_flag=True)
 
 async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.message.chat_id
     context.user_data[USER_STATE_KEY] = BotState.MAIN
-    # Clear pending data when returning to main menu
     context.user_data.pop(PENDING_GRADE_KEY, None)
     context.user_data.pop(PENDING_STATE_KEY, None)
     await send_and_track(update, context, "🏠 You are back at the Main Menu. What would you like to do?", reply_markup=MAIN_MENU_KEYBOARD)
 
 async def clear_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.message.chat_id
-    await delete_history(chat_id, context) # Use the refactored function
-    
-    # Clear all session data
+    await delete_history(chat_id, context)
     context.user_data.clear() 
 
     await update.message.reply_text(
@@ -347,7 +338,7 @@ async def back_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await main_menu(update, context)
         return
     
-    else: # Already at BotState.MAIN
+    else: 
         await send_and_track(update, context, "You are already at the Main Menu.", reply_markup=MAIN_MENU_KEYBOARD)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -356,7 +347,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     current_state: BotState = context.user_data.get(USER_STATE_KEY, BotState.MAIN)
     logger.info(f"User {chat_id} | State: {current_state.value} | Sent: {text}")
     
-    # --- Universal Navigation Buttons ---
     if text in ["Main Menu 🏠", "/start"]:
         await main_menu(update, context)
         return
@@ -366,8 +356,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if text == "Back ↩️":
         await back_menu(update, context)
         return
-    
-    # --- State Handling ---
     
     if current_state == BotState.MAIN:
         if text == "📚 Get Student Books":
@@ -379,7 +367,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await send_and_track(update, context, "Great! Please select the Grade for the Teacher Guides.", reply_markup=TEACHER_GRADE_KEYBOARD)
             return
         elif text == "📞 Let's Contact":
-            # The previous contact error was due to malformed Markdown links. Fixed in the constant.
             await send_and_track(update, context, CONTACT_INFO, reply_markup=MAIN_MENU_KEYBOARD, disable_web_page_preview=True)
             return
         else:
@@ -387,13 +374,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
             
     elif current_state in [BotState.STUDENT_GRADE, BotState.TEACHER_GRADE]:
-        match = re.search(r'Grade\s*(\d+)', text)
+        match = re.search(r'Grade\s (\d+)', text)
         if match:
             grade = match.group(1).strip()
             state_dir = STUDENT_DIR if current_state == BotState.STUDENT_GRADE else TEACHER_DIR
 
             if grade in TRACK_GRADES:
-                # Save the current state and grade for when track selection is complete
                 context.user_data[PENDING_GRADE_KEY] = grade
                 context.user_data[PENDING_STATE_KEY] = current_state
                 context.user_data[USER_STATE_KEY] = BotState.TRACK_SELECTION
@@ -404,9 +390,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 )
                 return
             elif grade in AVAILABLE_GRADES:
-                # Direct file sending for grades without track
                 await execute_file_sending(update, context, grade=grade, state=state_dir, track="")
-                # Remain in current state (STUDENT_GRADE/TEACHER_GRADE) to allow selecting another grade
                 return
             else:
                 keyboard = STUDENT_GRADE_KEYBOARD if current_state == BotState.STUDENT_GRADE else TEACHER_GRADE_KEYBOARD
@@ -430,8 +414,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         
         if track and grade and original_state:
             await execute_file_sending(update, context, grade=grade, state=state_dir, track=track)
-            
-            # Transition back to the grade selection menu after files are sent
             context.user_data[USER_STATE_KEY] = original_state
             context.user_data.pop(PENDING_GRADE_KEY, None)
             context.user_data.pop(PENDING_STATE_KEY, None)
@@ -449,12 +431,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
             
     else:
-        # Fallback for an unknown state or BotState change
         await main_menu(update, context)
 
 
 async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYPE, grade: str, state: str, track: str):
-    """Copies documents from the Telegram source channel to the user, hiding the sender."""
     chat_id = update.message.chat_id
 
     book_category = f"Grade {grade}"
@@ -487,8 +467,6 @@ async def execute_file_sending(update: Update, context: ContextTypes.DEFAULT_TYP
                 parse_mode="Markdown",
                 disable_notification=True
             )
-            
-            # Track sent message for deletion
             if MESSAGE_HISTORY_KEY not in context.user_data:
                 context.user_data[MESSAGE_HISTORY_KEY] = []
             context.user_data[MESSAGE_HISTORY_KEY].append(sent_message.message_id)
